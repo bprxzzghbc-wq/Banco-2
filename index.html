@@ -69,6 +69,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{padding:6px 8px;text-align:left;}
 th{border-bottom:2px solid var(--primary-color);}
 .dark-mode-button{position:fixed;top:10px;right:10px;padding:8px 12px;border:none;border-radius:12px;background:#444;color:white;cursor:pointer;z-index:999;}
+@media screen and (max-width:450px){.app{padding:10px;}.item input{width:75px;font-size:14px;}}
 </style>
 </head>
 <body>
@@ -171,7 +172,6 @@ function abrirAba(id, btn){
   if(btn) btn.classList.add('active');
 }
 
-// Atualizar totais
 function atualizarTotais(){
   let total=0, semMoedas=0, semCartao=0;
   for(const nome in abas){
@@ -185,7 +185,6 @@ function atualizarTotais(){
   localStorage.setItem('abas',JSON.stringify(abas));
 }
 
-// Atualizar lista e gráfico
 function atualizarSaldosLista(){
   const lista=document.getElementById('lista-saldos');
   lista.innerHTML='<h3>Saldos</h3>';
@@ -219,7 +218,7 @@ function atualizarGrafico(){
   });
 }
 
-// ================= MOVIMENTOS =================
+// ================ MOVIMENTOS ==================
 function mostrarFormMovimento(){
   const form=document.getElementById('novo-movimento');
   form.style.display=form.style.display==='none'?'block':'none';
@@ -227,8 +226,12 @@ function mostrarFormMovimento(){
 
 function preencherSelectAbas(){
   const s=document.getElementById('aba-movimento'); s.innerHTML='';
-  Object.keys(abas).forEach(n=>{let o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o);});
-  extrasAbas.forEach(e=>{let o=document.createElement('option');o.value=e;o.textContent=e;s.appendChild(o);});
+  Object.keys(abas).forEach(n=>{
+    let o=document.createElement('option'); o.value=n; o.textContent=n; s.appendChild(o);
+  });
+  extrasAbas.forEach(e=>{
+    let o=document.createElement('option'); o.value=e; o.textContent=e; s.appendChild(o);
+  });
 }
 
 function preencherFiltroAbas(){
@@ -250,7 +253,6 @@ function selecionarFiltroAba(botao){
   mostrarMovimentosMesAtual();
 }
 
-// Botões meses
 function atualizarSubAbasMensais(){
   const c = document.getElementById('sub-abas-meses');
   c.innerHTML = '';
@@ -264,12 +266,11 @@ function atualizarSubAbasMensais(){
       Array.from(c.querySelectorAll('button')).forEach(btn => btn.classList.remove('active'));
       b.classList.add('active');
     };
-    if(index === meses.length-1) b.classList.add('active'); // último mês ativo
+    if(index === meses.length-1) b.classList.add('active');
     c.appendChild(b);
   });
 }
 
-// Mostrar movimentos
 function mostrarMovimentosMesAtual(){
   const mesBotao = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.classList.contains('active'));
   if(mesBotao) mostrarMovimentosMes(mesBotao.textContent);
@@ -306,6 +307,42 @@ function mostrarMovimentosMes(m){
   c.appendChild(resumo);
 }
 
+function adicionarMovimento(){
+  const tipo = document.getElementById('tipo-movimento').value;
+  const valor = parseFloat(document.getElementById('valor-movimento').value);
+  const aba = document.getElementById('aba-movimento').value;
+  const desc = document.getElementById('descricao-movimento').value;
+  let data = document.getElementById('data-movimento').value || new Date().toISOString().slice(0,10);
+
+   if(!valor || !desc) { alert('Preencha todos os campos!'); return; }
+
+  const mes = data.slice(0,7); // Ano-Mês
+  if(!movimentos[mes]) movimentos[mes] = [];
+  
+  const tipoValor = tipo==='gasto' ? -valor : valor;
+  movimentos[mes].push({tipo, valor, aba, desc, data, tipoValor});
+
+  // Atualizar saldo se não for extra
+  if(!extrasAbas.includes(aba)){
+    abas[aba] += tipoValor;
+  }
+
+  localStorage.setItem('movimentos', JSON.stringify(movimentos));
+  localStorage.setItem('abas', JSON.stringify(abas));
+
+  // Reset form
+  document.getElementById('valor-movimento').value = '';
+  document.getElementById('descricao-movimento').value = '';
+  document.getElementById('data-movimento').value = '';
+  mostrarFormMovimento();
+
+  atualizarTotais();
+  atualizarGrafico();
+  atualizarSaldosLista();
+  atualizarSubAbasMensais();
+  mostrarMovimentosMesAtual();
+}
+
 function apagarMovimento(mesAno,index){
   if(!confirm('Tem a certeza que quer apagar este movimento?')) return;
   const mov = movimentos[mesAno][index];
@@ -315,13 +352,14 @@ function apagarMovimento(mesAno,index){
   movimentos[mesAno].splice(index,1);
   if(movimentos[mesAno].length===0) delete movimentos[mesAno];
   localStorage.setItem('movimentos', JSON.stringify(movimentos));
-  atualizarSubAbasMensais(); 
-  mostrarMovimentosMesAtual(); 
-   atualizarTotais(); 
+  atualizarTotais();
   atualizarGrafico();
+  atualizarSaldosLista();
+  atualizarSubAbasMensais();
+  mostrarMovimentosMesAtual();
 }
 
-// ================= PLANEAMENTO ==================
+// ================ PLANEAMENTO ==================
 const planeamentoData={
   "Money 2026":[
     {mes:'Janeiro',entradas:60,gastos:120,saldo:2835},
@@ -382,4 +420,3 @@ mostrarMovimentosMesAtual();
 </script>
 </body>
 </html>
-
