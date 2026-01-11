@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco Gonçalo</title>
+
+<style>
+/* ================== BASE ================== */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+ font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial;
+ background:#f2f3f7;
+ color:#222;
+ transition:background .3s,color .3s;
+}
+body.dark{
+ background:#121212;
+ color:#eee;
+}
+.app{max-width:420px;margin:auto;padding:15px}
+
+/* HEADER */
+.header{
+ background:linear-gradient(135deg,#d71c1c,#9e0000);
+ color:#fff;
+ padding:35px 25px;
+ border-radius:30px;
+ box-shadow:0 10px 30px rgba(0,0,0,.25);
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+.header h1{font-size:28px}
+.header p{opacity:.9;margin-top:6px}
+
+/* TABS */
+.tabs{
+ display:flex;
+ justify-content:space-around;
+ margin:20px 0;
+ flex-wrap:wrap;
+}
+.tab-button{
+ padding:10px 14px;
+ border:none;
+ border-radius:14px;
+ background:#ddd;
+ font-weight:600;
+ cursor:pointer;
+ margin:3px;
+ transition:0.3s;
+}
+.tab-button.active{background:#d71c1c;color:#fff}
+
+/* CARDS */
+.card{
+ background:#fff;
+ border-radius:22px;
+ padding:18px;
+ margin-bottom:14px;
+ box-shadow:0 6px 18px rgba(0,0,0,.08);
+ transition:all 0.3s;
+}
+body.dark .card{background:#1e1e1e;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+
+.total{
+ background:linear-gradient(135deg,#d71c1c,#a00000);
+ color:white;
+ text-align:center;
+}
+.total h2{font-size:34px;margin-top:6px}
+
+/* ITEM SALDO */
+.item{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:10px;
+}
+.item input,.item select{
+ border:none;
+ background:#f5f5f7;
+ padding:6px 8px;
+ border-radius:10px;
+ font-weight:600;
+ transition:0.3s;
+}
+.item input:focus{
+ outline:none;
+ background:#fff;
+ box-shadow:0 0 0 2px rgba(215,28,28,.3);
+}
+body.dark .item input{background:#2b2b2b;color:#eee}
+body.dark .item input:focus{background:#333}
+
+/* BOTÃO ADD */
+.add{
+ width:100%;
+ padding:10px;
+ border:none;
+ border-radius:14px;
+ background:#d71c1c;
+ color:#fff;
+ font-weight:700;
+ margin-top:10px;
+ cursor:pointer;
+ transition:0.3s;
+}
+.add:hover{background:#a00000}
+
+/* MOVIMENTOS */
+.mov{
+ display:flex;
+ justify-content:space-between;
+ margin-bottom:8px;
+ padding:8px 10px;
+ border-radius:12px;
+ background:#f5f5f7;
+ transition:0.3s;
+}
+.mov.gasto{color:#b00000}
+.mov.ganho{color:#0a7a2f}
+body.dark .mov{background:#2b2b2b}
+
+/* SUBTABS */
+.subtabs button{
+ margin:3px;
+ padding:6px 10px;
+ border:none;
+ border-radius:10px;
+ cursor:pointer;
+ transition:0.3s;
+}
+.subtabs button.active{
+ background:#d71c1c;
+ color:white;
+}
+
+/* RESUMO */
+.resumo-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px;
+}
+.resumo-card{
+ padding:14px;
+ border-radius:18px;
+ color:#fff;
+ text-align:center;
+}
+.resumo-card h4{font-size:14px;opacity:.9}
+.resumo-card strong{font-size:20px}
+.verde{background:#1e8f4d}
+.vermelho{background:#b00000}
+.azul{background:#1f4fd8}
+.cinza{background:#555}
+
+/* BOTÕES EXTRA */
+#darkModeBtn,#resetBtn{
+ padding:6px 10px;
+ border:none;
+ border-radius:10px;
+ cursor:pointer;
+ background:#ddd;
+ font-weight:600;
+ margin-left:5px;
+ transition:0.3s;
+}
+#darkModeBtn:hover,#resetBtn:hover{background:#d71c1c;color:#fff}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+ <div>
+  <h1>Olá Gonçalo 👋</h1>
+  <p>O teu banco pessoal</p>
+ </div>
+ <div>
+  <button id="darkModeBtn">🌙</button>
+  <button id="resetBtn">⟳ Reset</button>
+ </div>
+</header>
+
+<div class="tabs">
+ <button class="tab-button active" onclick="abrirAba('saldos',this)">Saldos</button>
+ <button class="tab-button" onclick="abrirAba('movimentos',this)">Movimentos</button>
+ <button class="tab-button" onclick="abrirAba('resumo',this)">Resumo</button>
+</div>
+
+<!-- SALDOS -->
+<section id="saldos">
+ <div class="card total">
+  <span>Total disponível</span>
+  <h2>€ <span id="total">0.00</span></h2>
+ </div>
+ <div class="card" id="listaSaldos"></div>
+ <canvas id="grafico" height="200"></canvas>
+</section>
+
+<!-- MOVIMENTOS -->
+<section id="movimentos" style="display:none">
+
+ <div class="card">
+  <div class="item">
+   <select id="tipo">
+    <option value="ganho">Ganho</option>
+    <option value="gasto">Gasto</option>
+   </select>
+   <input id="valor" type="number" placeholder="€">
+  </div>
+
+  <div class="item">
+   <input id="desc" type="text" placeholder="Descrição">
+   <input id="data" type="date">
+  </div>
+
+  <div class="item">
+   <select id="aba"></select>
+  </div>
+
+  <button class="add" onclick="adicionarMovimento()">Adicionar movimento</button>
+ </div>
+
+ <div class="card">
+  <div class="subtabs" id="meses"></div>
+  <div id="listaMovimentos"></div>
+ </div>
+
+</section>
+
+<!-- RESUMO -->
+<section id="resumo" style="display:none">
+ <div class="card">
+  <h3>Resumo do mês</h3>
+  <div class="resumo-grid" id="resumoCards"></div>
+ </div>
+</section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+/* ================== CONFIG ================== */
+const EXTRAS=['Avô','Pais'];
+const ABAS_KEY='bank_abas';
+const MOV_KEY='bank_mov';
+
+let abas=JSON.parse(localStorage.getItem(ABAS_KEY))??{
+ "Ibiza":245,"Dela":4010,"Money 2026":2775,
+ "Cartão":19.62,"Moedas":131.92
+};
+let movimentos=JSON.parse(localStorage.getItem(MOV_KEY))??{};
+let grafico=null;
+
+/* ================== UI ================== */
+function abrirAba(id,btn){
+ document.querySelectorAll('section').forEach(s=>s.style.display='none');
+ document.getElementById(id).style.display='block';
+ document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+}
+
+/* ================== SALDOS ================== */
+function renderSaldos(){
+ listaSaldos.innerHTML='';
+ let total=0;
+ for(const n in abas){
+  total+=abas[n];
+  const d=document.createElement('div');
+  d.className='item';
+  d.innerHTML=`<span>${n}</span><input type="number" value="${abas[n]}" readonly>`;
+  listaSaldos.appendChild(d);
+ }
+ totalEl.textContent=total.toFixed(2);
+ atualizarGrafico();
+}
+
+function atualizarGrafico(){
+ grafico?.destroy();
+ grafico=new Chart(document.getElementById('grafico'),{
+  type:'bar',
+  data:{labels:Object.keys(abas),
+  datasets:[{data:Object.values(abas),backgroundColor:'#d71c1c'}]},
+  options:{plugins:{legend:{display:false}}}
+ });
+}
+
+/* ================== MOVIMENTOS ================== */
+function preencherAbas(){
+ aba.innerHTML='';
+ [...Object.keys(abas),...EXTRAS].forEach(a=>aba.innerHTML+=`<option>${a}</option>`);
+}
+
+function adicionarMovimento(){
+ const t=tipo.value;
+ const v=Math.abs(+valor.value);
+ const d=desc.value.trim();
+ const dt=data.value||new Date().toISOString().slice(0,10);
+ const a=aba.value;
+ if(!v||!d) return alert('Preenche tudo');
+
+ if(!EXTRAS.includes(a)){
+  abas[a]+=t==='gasto'?-v:v;
+ }
+
+ const mes=dt.slice(0,7);
+ movimentos[mes]=movimentos[mes]||[];
+ movimentos[mes].push({t,v,a,d,dt});
+
+ if(t==='gasto' && !EXTRAS.includes(a) && abas[a]<0){
+   alert('⚠️ Atenção: saldo negativo!');
+ }
+
+ guardar();
+ renderMeses();
+ mostrarMes(mes);
+ valor.value=''; desc.value='';
+}
+
+function renderMeses(){
+ meses.innerHTML='';
+ Object.keys(movimentos).sort().forEach(m=>{
+  const b=document.createElement('button');
+  b.textContent=m;
+  b.onclick=()=>mostrarMes(m);
+  meses.appendChild(b);
+ });
+}
+
+function mostrarMes(m){
+ document.querySelectorAll('.subtabs button').forEach(b=>b.classList.remove('active'));
+ [...meses.children].find(b=>b.textContent===m)?.classList.add('active');
+ listaMovimentos.innerHTML='';
+ movimentos[m].forEach(x=>{
+  const d=document.createElement('div');
+  d.className='mov '+x.t;
+  d.innerHTML=`<span>${x.dt} · ${x.a} · ${x.d}</span>
+               <strong>${x.t==='gasto'?'-':'+'}${x.v}€</strong>`;
+  listaMovimentos.appendChild(d);
+ });
+ atualizarResumo(m);
+ renderSaldos();
+}
+
+/* ================== RESUMO ================== */
+function atualizarResumo(m){
+ let gastoAbas=0,gastoAvo=0,gastoPais=0,ganhos=0;
+
+ movimentos[m]?.forEach(x=>{
+  if(x.t==='gasto'){
+   if(x.a==='Avô') gastoAvo+=x.v;
+   else if(x.a==='Pais') gastoPais+=x.v;
+   else gastoAbas+=x.v;
+  }else{
+   if(!EXTRAS.includes(x.a)) ganhos+=x.v;
+  }
+ });
+
+ resumoCards.innerHTML=`
+  <div class="resumo-card vermelho">
+   <h4>Gastos (teu dinheiro)</h4><strong>€ ${gastoAbas.toFixed(2)}</strong>
+  </div>
+  <div class="resumo-card cinza">
+   <h4>Gastos Avô</h4><strong>€ ${gastoAvo.toFixed(2)}</strong>
+  </div>
+  <div class="resumo-card cinza">
+   <h4>Gastos Pais</h4><strong>€ ${gastoPais.toFixed(2)}</strong>
+  </div>
+  <div class="resumo-card verde">
+   <h4>Ganhos</h4><strong>€ ${ganhos.toFixed(2)}</strong>
+  </div>
+ `;
+}
+
+/* ================== DARK MODE & RESET ================== */
+document.getElementById('darkModeBtn').onclick=()=>{
+ document.body.classList.toggle('dark');
+};
+
+document.getElementById('resetBtn').onclick=()=>{
+ if(confirm('Deseja resetar todos os saldos e movimentos?')){
+  localStorage.removeItem(ABAS_KEY);
+  localStorage.removeItem(MOV_KEY);
+  location.reload();
+ }
+};
+
+/* ================== STORAGE ================== */
+function guardar(){
+ localStorage.setItem(ABAS_KEY,JSON.stringify(abas));
+ localStorage.setItem(MOV_KEY,JSON.stringify(movimentos));
+}
+
+/* ================== INIT ================== */
+const totalEl=document.getElementById('total');
+preencherAbas();
+renderSaldos();
+renderMeses();
+</script>
+
+</body>
+</html>
