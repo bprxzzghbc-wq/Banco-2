@@ -268,7 +268,16 @@ function mostrarMovimentosMes(m){
   const btn = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.textContent===m); 
   if(btn) btn.classList.add('active');
 
-  c.innerHTML=`<h4>Movimentos de ${m}</h4>`;
+  // ================= Totais gerais =================
+  let totalGeralEntradas=0, totalGeralSaidas=0;
+  Object.values(movimentos).flat().forEach(x=>{
+    if(x.tipo==='gasto') totalGeralSaidas+=x.valor;
+    else totalGeralEntradas+=x.valor;
+  });
+
+  c.innerHTML=`<h4>Movimentos de ${m}</h4>
+               <p style="margin-bottom:10px;">Total Geral Entradas: ${totalGeralEntradas.toFixed(2)} € | Total Geral Saídas: ${totalGeralSaidas.toFixed(2)} €</p>`;
+
   if(!movimentos[m] || movimentos[m].length===0){c.innerHTML+='<p>Nenhum movimento neste mês.</p>'; return;}
 
   let totalGanhos=0, totalGastos=0;
@@ -283,7 +292,7 @@ function mostrarMovimentosMes(m){
   });
 
   const resumo=document.createElement('div'); resumo.className='card small'; resumo.style.display='flex'; resumo.style.justifyContent='space-between'; resumo.style.marginTop='10px';
-  resumo.innerHTML=`<span>Total Entradas: ${totalGanhos.toFixed(2)} € | Total Saídas: ${totalGastos.toFixed(2)} € | Saldo: ${(totalGanhos-totalGastos).toFixed(2)} €</span>`;
+  resumo.innerHTML=`<span>Total Entradas: ${totalGanhos.toFixed(2)} € | Total Saídas: ${totalGastos.toFixed(2)} € | Saldo do Mês: ${(totalGanhos-totalGastos).toFixed(2)} €</span>`;
   c.appendChild(resumo);
 }
 
