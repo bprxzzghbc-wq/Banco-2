@@ -361,50 +361,6 @@ function mostrarPlaneamento(aba){
   });
   c.appendChild(t);
 }
-  // Função para ler dados do iCloud
-async function lerDadosICLOUD() {
-  try {
-    const data = await window.webkit.messageHandlers.getiCloudData.postMessage(''); 
-    // Se houver dados
-    if(data) {
-      abas = data.abas || abas;
-      movimentos = data.movimentos || movimentos;
-    }
-  } catch (e) {
-    console.log("Erro ao ler iCloud:", e);
-  }
-  atualizarSaldosLista();
-  atualizarSubAbasMensais();
-  mostrarMovimentosMesAtual();
-}
-
-// Função para gravar dados no iCloud
-function gravarDadosICLOUD() {
-  const data = { abas, movimentos };
-  try {
-    window.webkit.messageHandlers.setiCloudData.postMessage(data);
-  } catch(e) {
-    console.log("Erro ao gravar iCloud:", e);
-  }
-}
-
-// Exemplo: chamar gravarDadosICLOUD() sempre que adicionares ou apagares um movimento
-function adicionarMovimento() {
-  ...
-  localStorage.setItem('movimentos', JSON.stringify(movimentos));
-  gravarDadosICLOUD(); // <-- grava também no iCloud
-  ...
-}
-
-function apagarMovimento(mesAno,index){
-  ...
-  localStorage.setItem('movimentos', JSON.stringify(movimentos));
-  gravarDadosICLOUD(); // <-- grava também no iCloud
-  ...
-}
-
-// Inicialização
-lerDadosICLOUD();
 
 // ================== INICIALIZAÇÃO FINAL ==================
 atualizarSaldosLista();
