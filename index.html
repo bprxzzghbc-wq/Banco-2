@@ -222,22 +222,37 @@ function adicionarMovimento(){
   const desc=document.getElementById('descricao-movimento').value;
   let data=document.getElementById('data-movimento').value||new Date().toISOString().split('T')[0];
   if(valor<=0||!aba||!desc){alert('Preencha todos os campos!');return;}
-  if(!extrasAbas.includes(aba)){if(abas[aba]===undefined) abas[aba]=0; abas[aba]+=(tipo==='gasto'?-valor:valor);}
+  
+  if(!extrasAbas.includes(aba)){ 
+    if(abas[aba]===undefined) abas[aba]=0; 
+    abas[aba]+=(tipo==='gasto'?-valor:valor); 
+  }
+  
   const mesAno=data.slice(0,7);
   if(!movimentos[mesAno]) movimentos[mesAno]=[];
   movimentos[mesAno].push({tipo,tipoValor:(tipo==='gasto'?-valor:valor),valor,aba,desc,data});
   localStorage.setItem('movimentos', JSON.stringify(movimentos));
-  document.getElementById('valor-movimento').value=''; document.getElementById('descricao-movimento').value=''; document.getElementById('data-movimento').value='';
+
+  // Limpar formulário
+  document.getElementById('valor-movimento').value=''; 
+  document.getElementById('descricao-movimento').value=''; 
+  document.getElementById('data-movimento').value='';
   document.getElementById('novo-movimento').style.display='none';
-  atualizarSubAbasMensais(); mostrarMovimentosMes(mesAno); atualizarTotais(); atualizarGrafico();
+
+  atualizarSubAbasMensais(); 
+  mostrarMovimentosMes(mesAno); 
+  atualizarTotais(); 
+  atualizarGrafico();
 }
 
 function atualizarSubAbasMensais(){
   const c=document.getElementById('sub-abas-meses'); c.innerHTML='';
-  const meses=Object.keys(movimentos).length? Object.keys(movimentos).sort() : [new Date().toISOString().slice(0,7)];
+  const meses=Object.keys(movimentos).length ? Object.keys(movimentos).sort() : [new Date().toISOString().slice(0,7)];
   meses.forEach((m,index)=>{
     const b=document.createElement('button'); b.textContent=m;
-    b.onclick=()=>mostrarMovimentosMes(m); if(index===meses.length-1) b.classList.add('active'); c.appendChild(b);
+    b.onclick=()=>mostrarMovimentosMes(m); 
+    if(index===meses.length-1) b.classList.add('active'); 
+    c.appendChild(b);
   });
 }
 
@@ -250,34 +265,41 @@ function mostrarMovimentosMes(m){
   const abaFiltro = document.getElementById('filtro-aba').value;
   const c = document.getElementById('lista-movimentos-mensal');
   document.querySelectorAll('#sub-abas-meses button').forEach(b=>b.classList.remove('active'));
-  const btn = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.textContent===m); if(btn) btn.classList.add('active');
+  const btn = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.textContent===m); 
+  if(btn) btn.classList.add('active');
+
   c.innerHTML=`<h4>Movimentos de ${m}</h4>`;
   if(!movimentos[m] || movimentos[m].length===0){c.innerHTML+='<p>Nenhum movimento neste mês.</p>'; return;}
+
   let totalGanhos=0, totalGastos=0;
   movimentos[m].forEach((x,index)=>{
     if(abaFiltro!=='Todas' && x.aba!==abaFiltro) return;
     const d=document.createElement('div'); d.className='item '+(x.tipo==='gasto'?'negativo':'positivo');
     d.innerHTML=`<span>${x.data} - ${x.aba} - ${x.desc}</span>
                  <input type="text" value="${x.tipoValor.toFixed(2)} €" readonly>
-                 <button class="add-button" style="background:#888;margin-left:10px;padding:3px 6px;font-size:12px;" onclick="apagarMovimento('${m}',${index})">Apagar</button>`;
+                 <button class="add-button" style="background:#888;margin-left:10px;padding:3px 6px;font-size:12px;" onclick="apagarMovimento('${m}',${index})">-</button>`;
     c.appendChild(d);
     if(x.tipo==='gasto') totalGastos+=x.valor; else totalGanhos+=x.valor;
   });
+
   const resumo=document.createElement('div'); resumo.className='card small'; resumo.style.display='flex'; resumo.style.justifyContent='space-between'; resumo.style.marginTop='10px';
-  resumo.innerHTML=`<span>Ganhos: ${totalGanhos.toFixed(2)} € | Gastos: ${totalGastos.toFixed(2)} € | Saldo: ${(totalGanhos-totalGastos).toFixed(2)} €</span>`;
+  resumo.innerHTML=`<span>Total Entradas: ${totalGanhos.toFixed(2)} € | Total Saídas: ${totalGastos.toFixed(2)} € | Saldo: ${(totalGanhos-totalGastos).toFixed(2)} €</span>`;
   c.appendChild(resumo);
 }
 
 function apagarMovimento(mesAno,index){
   if(!confirm('Tem a certeza que quer apagar este movimento?')) return;
   const mov = movimentos[mesAno][index];
-    if(!extrasAbas.includes(mov.aba)){
+  if(!extrasAbas.includes(mov.aba)){
     abas[mov.aba]-=(mov.tipo==='gasto'?-mov.valor:mov.valor);
   }
   movimentos[mesAno].splice(index,1);
   if(movimentos[mesAno].length===0) delete movimentos[mesAno];
   localStorage.setItem('movimentos', JSON.stringify(movimentos));
-  atualizarSubAbasMensais(); mostrarMovimentosMesAtual(); atualizarTotais(); atualizarGrafico();
+  atualizarSubAbasMensais(); 
+  mostrarMovimentosMesAtual(); 
+  atualizarTotais(); 
+  atualizarGrafico();
 }
 
 // ================== PLANEAMENTO ==================
