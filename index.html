@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Banco Gonçalo - App Completa</title>
 <style>
+/* === SEU CSS EXISTENTE === */
 *{margin:0;padding:0;box-sizing:border-box;}
 body, html{font-family:'Helvetica Neue', Arial,sans-serif;transition:0.3s;}
 body.light{background:#f5f5f7;color:#333;}
@@ -120,18 +121,15 @@ let abas = JSON.parse(localStorage.getItem('abas')) || {
     "Capa 5 (azul)":15,"Capa Apple Azul Escura":0,"Moedas carteira":131.92
 };
 localStorage.setItem('abas', JSON.stringify(abas));
-
 let movimentos = JSON.parse(localStorage.getItem('movimentos')) || {};
 let extrasAbas = ["Avô","Pais"];
 let saldoGrafico;
 
-// DARK MODE
 function toggleDarkMode(){
   document.body.classList.toggle('dark');
   document.body.classList.toggle('light');
 }
 
-// ABAS
 function abrirAba(id, btn){
   document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
   document.getElementById(id).style.display='block';
@@ -139,7 +137,6 @@ function abrirAba(id, btn){
   if(btn) btn.classList.add('active');
 }
 
-// SALDOS
 function atualizarTotais(){
   let total=0, semMoedas=0, semCartao=0;
   for(const nome in abas){
@@ -186,7 +183,6 @@ function atualizarGrafico(){
   });
 }
 
-// MOVIMENTOS
 function mostrarFormMovimento(){
   const f=document.getElementById('novo-movimento');
   f.style.display=f.style.display==='none'?'block':'none';
@@ -216,11 +212,9 @@ function adicionarMovimento(){
   if(!movimentos[mesAno]) movimentos[mesAno]=[];
   movimentos[mesAno].push({tipo,tipoValor:(tipo==='gasto'?-valor:valor),valor,aba,desc,data});
   localStorage.setItem('movimentos', JSON.stringify(movimentos));
-
   document.getElementById('valor-movimento').value='';
   document.getElementById('descricao-movimento').value='';
   document.getElementById('data-movimento').value='';
-
   atualizarSubAbasMensais();
   mostrarMovimentosMes(mesAno);
 }
@@ -236,7 +230,6 @@ function atualizarSubAbasMensais(){
     c.appendChild(b);
   });
 
-  // Criar select de abas para filtro
   if(!document.getElementById('aba-filtro-movimento')){
     const select = document.createElement('select');
     select.id='aba-filtro-movimento';
@@ -244,6 +237,13 @@ function atualizarSubAbasMensais(){
       const mes = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.classList.contains('active'));
       if(mes) mostrarMovimentosMes(mes.textContent);
     };
+
+    // 🔥 NOVO: opção TODAS
+    let todas = document.createElement('option');
+    todas.value = "todas";
+    todas.textContent = "Todas";
+    select.appendChild(todas);
+
     Object.keys(abas).concat(extrasAbas).forEach(a=>{
       let o=document.createElement('option'); o.value=a; o.textContent=a; select.appendChild(o);
     });
@@ -262,14 +262,16 @@ function mostrarMovimentosMes(mes){
   if(!movimentos[mes] || movimentos[mes].length===0){c.innerHTML+='<p>Nenhum movimento neste mês.</p>';return;}
 
   let entradas=0, gastos=0;
-  movimentos[mes].filter(x=>x.aba===abaSelecionada).forEach(x=>{
+
+  movimentos[mes].filter(x=>abaSelecionada==="todas" || x.aba===abaSelecionada).forEach(x=>{
     if(x.tipo==='ganho') entradas+=x.valor;
     else gastos+=x.valor;
   });
+
   let fluxo=entradas-gastos;
   document.getElementById('resumo-mensal').innerHTML=`<div class="card small">Entradas: €${entradas.toFixed(2)} | Saídas: €${gastos.toFixed(2)} | Fluxo Total: €${fluxo.toFixed(2)}</div>`;
 
-  movimentos[mes].filter(x=>x.aba===abaSelecionada).forEach((x,i)=>{
+  movimentos[mes].filter(x=>abaSelecionada==="todas" || x.aba===abaSelecionada).forEach((x,i)=>{
     const d=document.createElement('div');
     d.className='item '+(x.tipo==='gasto'?'negativo':'positivo');
     d.innerHTML=`<span>${x.data} - ${x.aba} - ${x.desc}</span>
@@ -291,24 +293,10 @@ function apagarMovimento(mes, idx){
   mostrarMovimentosMes(mes);
 }
 
-// PLANEAMENTO
+// PLANEAMENTO (mantido igual)
 const planeamentoData={
-  "Money 2026":[
-    {mes:'Janeiro',entradas:60,gastos:120,saldo:2835},{mes:'Fevereiro',entradas:50,gastos:0,saldo:2885},
-    {mes:'Março',entradas:50,gastos:0,saldo:2935},{mes:'Abril',entradas:60,gastos:70,saldo:2925},
-    {mes:'Maio',entradas:50,gastos:0,saldo:2975},{mes:'Junho',entradas:350,gastos:60,saldo:3265},
-    {mes:'Julho',entradas:60,gastos:30,saldo:3295},{mes:'Agosto',entradas:60,gastos:50,saldo:3305},
-    {mes:'Setembro',entradas:60,gastos:110,saldo:3255},{mes:'Outubro',entradas:60,gastos:0,saldo:3315},
-    {mes:'Novembro',entradas:50,gastos:0,saldo:3365},{mes:'Dezembro',entradas:500,gastos:120,saldo:3745}
-  ],
-  "Dela":[
-    {mes:'Janeiro',entradas:0,gastos:0,saldo:4010},{mes:'Fevereiro',entradas:0,gastos:0,saldo:4010},
-    {mes:'Março',entradas:0,gastos:0,saldo:4010},{mes:'Abril',entradas:0,gastos:70,saldo:3940},
-    {mes:'Maio',entradas:0,gastos:0,saldo:3940},{mes:'Junho',entradas:0,gastos:40,saldo:3900},
-    {mes:'Julho',entradas:0,gastos:20,saldo:3880},{mes:'Agosto',entradas:0,gastos:50,saldo:3830},
-    {mes:'Setembro',entradas:0,gastos:110,saldo:3720},{mes:'Outubro',entradas:0,gastos:0,saldo:3720},
-    {mes:'Novembro',entradas:0,gastos:0,saldo:3720},{mes:'Dezembro',entradas:0,gastos:100,saldo:3620}
-  ]
+  "Money 2026":[{mes:'Janeiro',entradas:60,gastos:120,saldo:2835},{mes:'Fevereiro',entradas:50,gastos:0,saldo:2885},{mes:'Março',entradas:50,gastos:0,saldo:2935},{mes:'Abril',entradas:60,gastos:70,saldo:2925},{mes:'Maio',entradas:50,gastos:0,saldo:2975},{mes:'Junho',entradas:350,gastos:60,saldo:3265},{mes:'Julho',entradas:60,gastos:30,saldo:3295},{mes:'Agosto',entradas:60,gastos:50,saldo:3305},{mes:'Setembro',entradas:60,gastos:110,saldo:3255},{mes:'Outubro',entradas:60,gastos:0,saldo:3315},{mes:'Novembro',entradas:50,gastos:0,saldo:3365},{mes:'Dezembro',entradas:500,gastos:120,saldo:3745}],
+  "Dela":[{mes:'Janeiro',entradas:0,gastos:0,saldo:4010},{mes:'Fevereiro',entradas:0,gastos:0,saldo:4010},{mes:'Março',entradas:0,gastos:0,saldo:4010},{mes:'Abril',entradas:0,gastos:70,saldo:3940},{mes:'Maio',entradas:0,gastos:0,saldo:3940},{mes:'Junho',entradas:0,gastos:40,saldo:3900},{mes:'Julho',entradas:0,gastos:20,saldo:3880},{mes:'Agosto',entradas:0,gastos:50,saldo:3830},{mes:'Setembro',entradas:0,gastos:110,saldo:3720},{mes:'Outubro',entradas:0,gastos:0,saldo:3720},{mes:'Novembro',entradas:0,gastos:0,saldo:3720},{mes:'Dezembro',entradas:0,gastos:100,saldo:3620}]
 };
 
 function mostrarPlaneamento(aba){
@@ -321,7 +309,6 @@ function mostrarPlaneamento(aba){
   tabela.innerHTML=html;
 }
 
-// INIT
 window.onload=function(){
   atualizarSaldosLista();
   preencherSelectAbas();
