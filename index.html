@@ -125,11 +125,13 @@ let movimentos = JSON.parse(localStorage.getItem('movimentos')) || {};
 let extrasAbas = ["Avô","Pais"];
 let saldoGrafico;
 
+// DARK MODE
 function toggleDarkMode(){
   document.body.classList.toggle('dark');
   document.body.classList.toggle('light');
 }
 
+// ABAS
 function abrirAba(id, btn){
   document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
   document.getElementById(id).style.display='block';
@@ -233,29 +235,47 @@ function atualizarSubAbasMensais(){
     if(index===Object.keys(movimentos).length-1) b.classList.add('active');
     c.appendChild(b);
   });
+
+  // Criar select de abas para filtro
+  if(!document.getElementById('aba-filtro-movimento')){
+    const select = document.createElement('select');
+    select.id='aba-filtro-movimento';
+    select.onchange = ()=>{ 
+      const mes = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.classList.contains('active'));
+      if(mes) mostrarMovimentosMes(mes.textContent);
+    };
+    Object.keys(abas).concat(extrasAbas).forEach(a=>{
+      let o=document.createElement('option'); o.value=a; o.textContent=a; select.appendChild(o);
+    });
+    c.parentNode.insertBefore(select,c);
+  }
 }
 
-function mostrarMovimentosMes(m){
+function mostrarMovimentosMes(mes){
+  const abaSelecionada = document.getElementById('aba-filtro-movimento').value;
   const c=document.getElementById('lista-movimentos-mensal');
   document.querySelectorAll('#sub-abas-meses button').forEach(b=>b.classList.remove('active'));
-  const btn = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.textContent===m);
+  const btn = Array.from(document.querySelectorAll('#sub-abas-meses button')).find(b=>b.textContent===mes);
   if(btn) btn.classList.add('active');
 
-  c.innerHTML=`<h4>Movimentos de ${m}</h4>`;
-  if(!movimentos[m] || movimentos[m].length===0){c.innerHTML+='<p>Nenhum movimento neste mês.</p>';return;}
+  c.innerHTML=`<h4>Movimentos de ${mes} - ${abaSelecionada}</h4>`;
+  if(!movimentos[mes] || movimentos[mes].length===0){c.innerHTML+='<p>Nenhum movimento neste mês.</p>';return;}
 
   let entradas=0, gastos=0;
-  movimentos[m].forEach(x=>{if(x.tipo==='ganho') entradas+=x.valor; else gastos+=x.valor;});
-  let fluxo=entradas+gastos;
+  movimentos[mes].filter(x=>x.aba===abaSelecionada).forEach(x=>{
+    if(x.tipo==='ganho') entradas+=x.valor;
+    else gastos+=x.valor;
+  });
+  let fluxo=entradas-gastos;
   document.getElementById('resumo-mensal').innerHTML=`<div class="card small">Entradas: €${entradas.toFixed(2)} | Saídas: €${gastos.toFixed(2)} | Fluxo Total: €${fluxo.toFixed(2)}</div>`;
 
-  movimentos[m].forEach((x,i)=>{
+  movimentos[mes].filter(x=>x.aba===abaSelecionada).forEach((x,i)=>{
     const d=document.createElement('div');
     d.className='item '+(x.tipo==='gasto'?'negativo':'positivo');
     d.innerHTML=`<span>${x.data} - ${x.aba} - ${x.desc}</span>
                    <div>
                      <input type="text" value="${x.tipoValor.toFixed(2)} €" readonly>
-                     <button class="delete-btn" onclick="apagarMovimento('${m}',${i})">🗑️</button>
+                     <button class="delete-btn" onclick="apagarMovimento('${mes}',${i})">🗑️</button>
                    </div>`;
     c.appendChild(d);
   });
@@ -271,58 +291,41 @@ function apagarMovimento(mes, idx){
   mostrarMovimentosMes(mes);
 }
 
-// PLANEAMENTO - TODOS OS MESES
+// PLANEAMENTO
 const planeamentoData={
   "Money 2026":[
-    {mes:'Janeiro',entradas:60,gastos:120,saldo:2835},
-    {mes:'Fevereiro',entradas:50,gastos:0,saldo:2885},
-    {mes:'Março',entradas:50,gastos:0,saldo:2935},
-    {mes:'Abril',entradas:60,gastos:70,saldo:2925},
-    {mes:'Maio',entradas:50,gastos:0,saldo:2975},
-    {mes:'Junho',entradas:350,gastos:60,saldo:3265},
-    {mes:'Julho',entradas:60,gastos:30,saldo:3295},
-    {mes:'Agosto',entradas:60,gastos:50,saldo:3305},
-    {mes:'Setembro',entradas:60,gastos:110,saldo:3255},
-    {mes:'Outubro',entradas:50,gastos:0,saldo:3305},
-    {mes:'Novembro',entradas:50,gastos:0,saldo:3355},
-    {mes:'Dezembro',entradas:0,gastos:0,saldo:3355}
+    {mes:'Janeiro',entradas:60,gastos:120,saldo:2835},{mes:'Fevereiro',entradas:50,gastos:0,saldo:2885},
+    {mes:'Março',entradas:50,gastos:0,saldo:2935},{mes:'Abril',entradas:60,gastos:70,saldo:2925},
+    {mes:'Maio',entradas:50,gastos:0,saldo:2975},{mes:'Junho',entradas:350,gastos:60,saldo:3265},
+    {mes:'Julho',entradas:60,gastos:30,saldo:3295},{mes:'Agosto',entradas:60,gastos:50,saldo:3305},
+    {mes:'Setembro',entradas:60,gastos:110,saldo:3255},{mes:'Outubro',entradas:60,gastos:0,saldo:3315},
+    {mes:'Novembro',entradas:50,gastos:0,saldo:3365},{mes:'Dezembro',entradas:500,gastos:120,saldo:3745}
   ],
   "Dela":[
-    {mes:'Janeiro',entradas:0,gastos:0,saldo:4010},
-    {mes:'Fevereiro',entradas:0,gastos:0,saldo:4010},
-    {mes:'Março',entradas:0,gastos:0,saldo:4010},
-    {mes:'Abril',entradas:0,gastos:0,saldo:4010},
-    {mes:'Maio',entradas:0,gastos:0,saldo:4010},
-    {mes:'Junho',entradas:0,gastos:0,saldo:4010},
-    {mes:'Julho',entradas:0,gastos:0,saldo:4010},
-    {mes:'Agosto',entradas:0,gastos:0,saldo:4010},
-    {mes:'Setembro',entradas:0,gastos:0,saldo:4010},
-    {mes:'Outubro',entradas:0,gastos:0,saldo:4010},
-    {mes:'Novembro',entradas:0,gastos:0,saldo:4010},
-    {mes:'Dezembro',entradas:0,gastos:0,saldo:4010}
+    {mes:'Janeiro',entradas:0,gastos:0,saldo:4010},{mes:'Fevereiro',entradas:0,gastos:0,saldo:4010},
+    {mes:'Março',entradas:0,gastos:0,saldo:4010},{mes:'Abril',entradas:0,gastos:70,saldo:3940},
+    {mes:'Maio',entradas:0,gastos:0,saldo:3940},{mes:'Junho',entradas:0,gastos:40,saldo:3900},
+    {mes:'Julho',entradas:0,gastos:20,saldo:3880},{mes:'Agosto',entradas:0,gastos:50,saldo:3830},
+    {mes:'Setembro',entradas:0,gastos:110,saldo:3720},{mes:'Outubro',entradas:0,gastos:0,saldo:3720},
+    {mes:'Novembro',entradas:0,gastos:0,saldo:3720},{mes:'Dezembro',entradas:0,gastos:100,saldo:3620}
   ]
 };
 
 function mostrarPlaneamento(aba){
-  const c=document.getElementById('tabela-planeamento');
-  c.innerHTML='';
-  const dados = planeamentoData[aba];
-  if(!dados){c.innerHTML='Sem dados'; return;}
+  const tabela=document.getElementById('tabela-planeamento');
+  tabela.innerHTML='';
+  if(!planeamentoData[aba]) return;
   let html='<table><tr><th>Mês</th><th>Entradas (€)</th><th>Gastos (€)</th><th>Saldo (€)</th></tr>';
-  dados.forEach(d=>{
-    html+=`<tr><td>${d.mes}</td><td>${d.entradas.toFixed(2)}</td><td>${d.gastos.toFixed(2)}</td><td>${d.saldo.toFixed(2)}</td></tr>`;
-  });
+  planeamentoData[aba].forEach(d=>html+=`<tr><td>${d.mes}</td><td>${d.entradas}</td><td>${d.gastos}</td><td>${d.saldo}</td></tr>`);
   html+='</table>';
-  c.innerHTML = html;
+  tabela.innerHTML=html;
 }
 
-// INICIALIZAÇÃO
-window.onload = function() {
-  preencherSelectAbas();
+// INIT
+window.onload=function(){
   atualizarSaldosLista();
+  preencherSelectAbas();
   atualizarSubAbasMensais();
-  const ultMes = Object.keys(movimentos).sort().pop();
-  if(ultMes) mostrarMovimentosMes(ultMes);
   mostrarPlaneamento('Money 2026');
 };
 </script>
