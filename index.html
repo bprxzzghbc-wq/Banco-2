@@ -268,7 +268,7 @@ function mostrarMovimentosMes(mes){
     else gastos+=x.valor;
   });
 
-  let fluxo=entradas-gastos;
+  let fluxo=entradas+gastos;
   document.getElementById('resumo-mensal').innerHTML=`<div class="card small">Entradas: €${entradas.toFixed(2)} | Saídas: €${gastos.toFixed(2)} | Fluxo Total: €${fluxo.toFixed(2)}</div>`;
 
   movimentos[mes].filter(x=>abaSelecionada==="todas" || x.aba===abaSelecionada).forEach((x,i)=>{
